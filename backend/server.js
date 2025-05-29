@@ -31,7 +31,7 @@ const app = express();
 // CORS Configuration
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://whiffelite-frontend.vercel.app"
+  "https://whiffelite.vercel.app"
 ];
 
 const corsOptions = {
