@@ -29,9 +29,21 @@ const { initializeSocket } = require("./socket");
 const app = express();
 
 // CORS Configuration
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://whiffelite-frontend.vercel.app"
+];
+
 const corsOptions = {
-  origin: "http://localhost:3000", // Replace with your frontend URL (e.g., http://localhost:3000)
-  credentials: true, // Allow credentials (cookies, HTTP authentication)
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true); // Allow non-browser requests or same origin
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
 };
 
 app.use(cors(corsOptions)); // Use CORS with options
