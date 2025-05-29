@@ -16,6 +16,7 @@ const cartItemSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    store: { type: mongoose.Schema.Types.ObjectId, ref: "Store" },
   },
   { _id: false }
 );
@@ -35,6 +36,7 @@ const cartSchema = new mongoose.Schema(
       required: true,
       default: 0, 
     },
+    
   },
   { timestamps: true }
 );

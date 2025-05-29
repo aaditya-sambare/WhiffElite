@@ -18,5 +18,25 @@ router.get("/", protect, admin, async (req, res) => {
   }
 });
 
+// @route   PUT /api/admin/products/:id
+// @desc    Update a product (admin only)
+// @access  Private/Admin
+router.put("/:id", protect, admin, async (req, res) => {
+  try {
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 module.exports = router;
+

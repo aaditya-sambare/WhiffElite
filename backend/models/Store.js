@@ -27,13 +27,23 @@ const storeSchema = new mongoose.Schema(
     },
     image: {
       type: String,
-      required: true,
+      required: false,
     },
     user: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
+      required: false,
+    },
+    storeOwner: {
+      type: mongoose.Schema.ObjectId,
+      ref: "StoreOwner",
       required: true,
     },
+    isActive: {
+      type: Boolean,
+      default: false,
+    },
+    
   },
   {
     timestamps: true,

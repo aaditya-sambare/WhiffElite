@@ -10,7 +10,11 @@ const router = express.Router();
 
 router.get("/", protect, admin, async (req, res) => {
   try {
-    const orders = await Order.find({}).populate("user", "name email");
+    const orders = await Order.find({})
+      .populate("user")
+      .populate("orderItems.productId")
+      .populate("ride") 
+      .populate("captain"); 
     res.json(orders);
   } catch (error) {
     console.error(error);
@@ -24,18 +28,17 @@ router.get("/", protect, admin, async (req, res) => {
 
 router.put("/:id", protect, admin, async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id).populate("user","name")
+    const order = await Order.findById(req.params.id).populate("user", "name");
     if (order) {
-     order.status = req.body.status || order.status;
+      order.status = req.body.status || order.status;
 
-     if (req.body.status === "delivered") {
-       order.isDelivered = true;
-       order.deliveredAt = Date.now();
-     } else {
-       order.isDelivered = false;
-       order.deliveredAt = null;
-     }
-
+      if (req.body.status === "delivered") {
+        order.isDelivered = true;
+        order.deliveredAt = Date.now();
+      } else {
+        order.isDelivered = false;
+        order.deliveredAt = null;
+      }
 
       const updateOrder = await order.save();
       res.json(updateOrder);

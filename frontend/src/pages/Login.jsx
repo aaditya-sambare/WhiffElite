@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import login from "../assets/Logo/logo.jpg";
-import { loginUser } from "../redux/slice/authSlice";
+import { loginUser, updateUserLocation } from "../redux/slice/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { mergeCart } from "../redux/slice/cartSlice";
 import { toast } from "react-toastify";
+import { FaCar, FaStore } from "react-icons/fa";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -12,49 +13,82 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, guestId ,loading} = useSelector((state) => state.auth);
+  const { user, guestId, loading, error, token } = useSelector(
+    (state) => state.auth
+  );
   const { cart } = useSelector((state) => state.cart);
 
-  // Get the redirect parameter and check if it's checkout or something
   const redirect = new URLSearchParams(location.search).get("redirect") || "/";
   const isCheckoutRedirect = redirect.includes("checkout");
-
-  // Add a flag to track if toast has been shown
   const [toastShown, setToastShown] = useState(false);
 
-  // If the user is logged in, handle cart merge and navigation
   useEffect(() => {
     if (user && !toastShown) {
-      setToastShown(true); // Set the flag to true to prevent multiple toasts
+      setToastShown(true);
       toast.success("Successfully Logged In!");
 
       if (cart?.products?.length > 0 && guestId) {
-        dispatch(mergeCart({ guestId, user })).then(() => {
-          navigate(isCheckoutRedirect ? "/checkout" : "/");
-        });
+        dispatch(mergeCart({ guestId, user }))
+          .then(() => navigate(isCheckoutRedirect ? "/checkout" : "/"))
+          .catch(() => {
+            toast.error("Failed to merge cart. Please try again later.");
+            navigate(isCheckoutRedirect ? "/checkout" : "/");
+          });
       } else {
         navigate(isCheckoutRedirect ? "/checkout" : "/");
       }
     }
-  }, [user, guestId, cart, dispatch, navigate, isCheckoutRedirect, toastShown]);
+
+    if (error && !toastShown) {
+      toast.error(error);
+      setToastShown(true);
+    }
+  }, [
+    user,
+    guestId,
+    cart,
+    dispatch,
+    navigate,
+    isCheckoutRedirect,
+    toastShown,
+    error,
+  ]);
+
+  const handleLogin = async (formData) => {
+    const resultAction = await dispatch(loginUser(formData));
+    if (loginUser.fulfilled.match(resultAction)) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          dispatch(
+            updateUserLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+              token: resultAction.payload.token,
+            })
+          );
+        });
+      }
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Dispatch loginUser action
-    dispatch(loginUser({ email: email.toLowerCase(), password }));
+    handleLogin({ email: email.toLowerCase(), password }).catch(() => {
+      toast.error("Login failed. Please check your credentials and try again.");
+    });
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      {/* Left side: Login Form */}
-      <div className="w-full max-w-md bg-white p-8 rounded-lg border shadow-sm mr-10">
-        <div className="flex justify-center mb-6">
-          <h2 className="text-2xl font-bold">WiffÉlite</h2>
+    <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-gray-100 p-4">
+      {/* Left (Form) */}
+      <div className="w-full max-w-md bg-white p-6 md:p-8 rounded-lg shadow-md mb-8 md:mb-0 md:mr-10">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold">WhiffÉlite</h2>
+          <h3 className="text-xl font-semibold mt-2">Hey there! 👋</h3>
+          <p className="text-sm text-gray-500">
+            Enter your email and password.
+          </p>
         </div>
-        <h3 className="text-xl font-semibold text-center mb-2">
-          Hey there! 👋
-        </h3>
-        <p className="text-center mb-6">Enter your email and password.</p>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-sm font-semibold mb-2">Email</label>
@@ -67,7 +101,6 @@ const Login = () => {
               required
             />
           </div>
-
           <div className="mb-6">
             <label className="block text-sm font-semibold mb-2">Password</label>
             <input
@@ -79,35 +112,52 @@ const Login = () => {
               required
             />
           </div>
-
           <button
             type="submit"
             className="w-full bg-black text-white p-2 rounded-lg hover:bg-gray-800 transition"
           >
-           {loading ? "loading..." : "Sign In"}
+            {loading ? "loading..." : "Sign In"}
           </button>
-
-          <p className="mt-6 text-center text-sm">
-            Don't have an account?{" "}
-            <Link
-              to={`/register?redirect=${encodeURIComponent(redirect)}`}
-              className="text-blue-500 hover:underline"
-            >
-              Register
-            </Link>
-          </p>
         </form>
+
+        <p className="mt-6 text-center text-sm">
+          Don’t have an account?{" "}
+          <Link
+            to={`/register?redirect=${encodeURIComponent(redirect)}`}
+            className="text-blue-500 hover:underline"
+          >
+            Register
+          </Link>
+        </p>
+
+        <div className="mt-6">
+          <p className="text-center text-sm text-gray-500 mb-3">Login as:</p>
+          <div className="flex justify-center gap-6">
+            <Link
+              to={`/captain-login?redirect=${encodeURIComponent(redirect)}`}
+              className="flex flex-col items-center text-gray-700 hover:text-black"
+            >
+              <FaCar className="text-3xl mb-1" />
+              <span className="text-xs">Captain</span>
+            </Link>
+            <Link
+              to={`/store-owner/login?redirect=${encodeURIComponent(redirect)}`}
+              className="flex flex-col items-center text-gray-700 hover:text-black"
+            >
+              <FaStore className="text-3xl mb-1" />
+              <span className="text-xs">Store</span>
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {/* Right side: Image Section */}
-      <div className="hidden md:block w-1/2 bg-black rounded-lg">
-        <div className="h-full flex flex-col justify-center items-center px-6">
-          <img
-            src={login}
-            alt="Login visual"
-            className="h-[750px] w-full object-cover rounded-lg"
-          />
-        </div>
+      {/* Right (Image) */}
+      <div className="hidden md:block w-full md:w-1/2 max-w-[600px]">
+        <img
+          src={login}
+          alt="Login visual"
+          className="w-full h-auto object-cover rounded-lg shadow-md"
+        />
       </div>
     </div>
   );

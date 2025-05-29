@@ -5,6 +5,8 @@ import {
   fetchAllOrders,
   updateOrderStatus,
 } from "../../redux/slice/adminOrderSlice";
+import { toast } from "react-toastify"; // For notifications
+import { FiLoader } from "react-icons/fi";
 
 const OrderManagement = () => {
   const dispatch = useDispatch();
@@ -13,7 +15,7 @@ const OrderManagement = () => {
   const { user } = useSelector((state) => state.auth);
   const { orders, loading, error } = useSelector((state) => state.adminOrders);
 
-  //Handle Status change
+  // Handle Status change
   const handleStatusChange = (orderId, newStatus) => {
     dispatch(
       updateOrderStatus({
@@ -21,18 +23,31 @@ const OrderManagement = () => {
         status: newStatus,
       })
     );
-
-    useEffect(() => {
-      if (!user || user.role !== "admin") {
-        navigate("/");
-      } else {
-        dispatch(fetchAllOrders());
-      }
-    }, [dispatch, user, navigate]);
+    toast.success("Order status updated successfully!"); // Success notification
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error...</p>;
+  useEffect(() => {
+    if (!user || user.role !== "admin") {
+      toast.error("You do not have access to this page.");
+      navigate("/"); // Redirect to home if not an admin
+    } else {
+      dispatch(fetchAllOrders());
+    }
+  }, [dispatch, user, navigate]);
+
+  
+    if (loading)
+      return (
+        <div className="flex justify-center items-center min-h-[200px]">
+          <FiLoader className="animate-spin text-4xl text-blue-500" />
+        </div>
+      );
+  if (error)
+    return (
+      <div className="p-4 bg-red-100 text-red-700 rounded-md shadow-md mb-6">
+        Error: {error}
+      </div>
+    );
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -59,9 +74,25 @@ const OrderManagement = () => {
                   <td className="py-4 px-4 font-medium text-gray-900 whitespace-nowrap">
                     {order._id}
                   </td>
-                  <td className="p-4">{order.user._id}</td>
-                  <td className="p-4">₹{order.totalPrice.toFixed(2)}</td>
-                  <td className="p-4">{order.status}</td>
+                  <td className="py-4 px-4 font-medium text-gray-900 whitespace-nowrap">
+                    {order.user?._id}
+                  </td>
+                  <td className="py-4 px-4 font-medium text-gray-900 whitespace-nowrap">
+                    ₹{order.totalPrice.toFixed(2)}
+                  </td>
+                  <td
+                    className={`p-4 font-semibold ${
+                      order.status === "Processing"
+                        ? "text-yellow-800"
+                        : order.status === "Shipped"
+                        ? " text-blue-800"
+                        : order.status === "Delivered"
+                        ? " text-green-900"
+                        : " text-red-800"
+                    }`}
+                  >
+                    {order.status}
+                  </td>
                   <td className="p-4">
                     <select
                       value={order.status}
@@ -70,6 +101,7 @@ const OrderManagement = () => {
                       }
                       className="border bg-gray-50 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 border-gray-300"
                     >
+                      <option value="">Change Status</option>
                       <option value="processing">Processing</option>
                       <option value="shipped">Shipped</option>
                       <option value="delivered">Delivered</option>

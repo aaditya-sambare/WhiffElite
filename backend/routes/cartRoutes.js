@@ -16,7 +16,7 @@ const getCart = async (userId, guestId) => {
 // @desc    Add product to cart for a guest or logged-in user
 // @access  Public
 router.post("/", async (req, res) => {
-  const { productId, quantity, size, color, guestId, userId } = req.body;
+  const { productId, quantity, size, color, guestId, userId, store } = req.body;
 
   try {
     // Validate the product exists
@@ -56,6 +56,7 @@ router.post("/", async (req, res) => {
           size,
           color,
           quantity,
+          store,
         });
       }
 
@@ -84,6 +85,7 @@ router.post("/", async (req, res) => {
             size,
             color,
             quantity,
+            store,
           },
         ],
         totalPrice: price * quantity,
@@ -157,7 +159,7 @@ router.put("/", async (req, res) => {
 //@access public
 
 router.delete("/", async (req, res) => {
-  const { productId, size, color, guestId, userId } = req.body;
+  const { productId, size, color, guestId, userId, store } = req.body;
   try {
     let cart = await getCart(userId, guestId);
 

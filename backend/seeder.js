@@ -4,58 +4,68 @@ const mongoose = require("mongoose");
 const Product = require("./models/product");
 const User = require("./models/user");
 const Cart = require("./models/Cart");
-const Store = require("./models/Store");
+const Checkout = require("./models/Checkout");
+const Ride = require("./models/ride");
+const Order = require("./models/Order");
 
 const products = require("./data/products");
-const stores = require("./data/stores");
+const storesData = require("./data/stores");
+
+const StoreOwner = require("./models/storeOwner");
+const Store = require("./models/Store");
+const Captian = require("./models/captain")
 
 dotenv.config();
 
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+mongoose.connect(process.env.MONGO_URI);
 
 const seedData = async () => {
   try {
     // Clear collections
-    await User.deleteMany();
     await Cart.deleteMany();
-    await Product.deleteMany();
-    await Store.deleteMany();
+    await Checkout.deleteMany();
+    await Ride.deleteMany();
+    await Order.deleteMany();
+    // await User.deleteMany();
+    await Captian.deleteMany();
+    // await Product.deleteMany();
 
-    // Create default admin user
-    const createdUser = await User.create({
-      name: "Admin User",
-      email: "admin@example.com",
-      password: "12345678",
-      role: "admin",
-    });
+    // Captian.updateMany(
+    //   { deliveries: { $type: "array" } },
+    //   { $set: { deliveries: 0 } }
+    // );
+    // await Product.deleteMany();
+    // await Store.deleteMany();
 
-    const userID = createdUser._id;
+    // Find the store owner
+    // const storeOwner = await StoreOwner.findOne({ email: "store@gmail.com" });
+    // if (!storeOwner) throw new Error("Store owner not found");
 
-    // Add user field to all products
-    const sampleProducts = products.map((product) => ({
-      ...product,
-      user: userID,
-    }));
+    // // Insert stores with storeOwner
+    // const storesWithOwner = storesData.map((store) => ({
+    //   ...store,
+    //   storeOwner: storeOwner._id,
+    //   user: storeOwner._id, // If you want to keep the user field for compatibility
+    // }));
+    // const insertedStores = await Store.insertMany(storesWithOwner);
 
-    const insertedProducts = await Product.insertMany(sampleProducts);
+    // // Update the StoreOwner's stores array
+    // const storeIds = insertedStores.map((store) => store._id);
+    // await StoreOwner.findByIdAndUpdate(storeOwner._id, {
+    //   $set: { stores: storeIds },
+    // });
 
-    // Create stores and link products where brand === store.name
-    const sampleStores = stores.map((store) => {
-      const matchingProducts = insertedProducts
-        .filter((product) => product.brand === store.name)
-        .map((p) => p._id);
-
-      return {
-        ...store,
-        user: userID,
-        products: matchingProducts,
-      };
-    });
-
-    await Store.insertMany(sampleStores);
+    // // Insert products, each assigned to a random store
+    // const productsWithStore = products.map((product) => {
+    //   const randomStore =
+    //     insertedStores[Math.floor(Math.random() * insertedStores.length)];
+    //   return {
+    //     ...product,
+    //     store: randomStore._id,
+    //     user: storeOwner._id, // If your product schema requires a user field
+    //   };
+    // });
+    // await Product.insertMany(productsWithStore);
 
     console.log("Stores and products seeded successfully!");
     process.exit();

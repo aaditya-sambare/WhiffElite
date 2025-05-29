@@ -4,7 +4,6 @@ import { useSearchParams } from "react-router-dom";
 const SortOptions = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Handle the sort change
   const handleSortChange = (e) => {
     const sortBy = e.target.value;
     const newSearchParams = new URLSearchParams(searchParams);
@@ -18,9 +17,12 @@ const SortOptions = () => {
 
   return (
     <div className="mb-4 flex items-center justify-end">
+      <label htmlFor="sort" className="mr-2 text-sm font-medium text-gray-700">
+        Sort by:
+      </label>
       <select
         id="sort"
-        className="border p-2 rounded-md focus:outline-none"
+        className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         value={searchParams.get("sortBy") || ""}
         onChange={handleSortChange}
       >

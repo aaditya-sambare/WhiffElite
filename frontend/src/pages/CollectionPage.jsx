@@ -43,31 +43,48 @@ const CollectionPage = () => {
   }, [isSidebarOpen]);
 
   return (
-    <div className="flex flex-col lg:flex-row">
-      {/* Mobile filter button */}
-      <button
-        onClick={toggleSidebar}
-        className="lg:hidden border p-2 flex justify-center items-center"
-      >
-        <FaFilter className="mr-2" />
-        Filters
-      </button>
+    <div className="relative lg:flex bg-gray-50 min-h-screen">
+      {/* Overlay for mobile */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-40 z-30 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
-      {/* Filter sidebar */}
+      {/* Sidebar */}
       <div
         ref={sidebarRef}
-        className={`${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } fixed inset-y-0 z-50 left-0 w-64 bg-white overflow-y-auto transition-transform duration-300 lg:static lg:translate-x-0`}
+        className={`fixed z-40 top-0 left-0 h-full w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
+          ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
+          lg:relative lg:translate-x-0 lg:z-auto`}
       >
-        <FilterSidebar />
+        <div className="h-full overflow-y-auto border-r">
+          <FilterSidebar />
+        </div>
       </div>
 
       {/* Main content */}
-      <div className="flex-grow p-4">
-        <h2 className="text-2xl uppercase mb-4">All collection</h2>
+      <div className="flex-1 p-4 lg:p-8">
+        {/* Mobile filter button */}
+        <div className="lg:hidden mb-4 flex justify-end">
+          <button
+            onClick={toggleSidebar}
+            className="inline-flex items-center px-4 py-2 text-sm font-medium bg-white border rounded shadow hover:bg-gray-100"
+          >
+            <FaFilter className="mr-2" />
+            Filters
+          </button>
+        </div>
 
-        <SortOptions />
+        <h2 className="text-2xl font-semibold tracking-wide uppercase  text-gray-800">
+       All collection
+        </h2>
+
+        <div className="mb-6">
+          <SortOptions />
+        </div>
+
         <ProductGrid products={products} loading={loading} error={error} />
       </div>
     </div>

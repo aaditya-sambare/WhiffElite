@@ -28,22 +28,20 @@ export const fetchUserOrders = createAsyncThunk(
 // Async thunk to fetch order details by id
 export const fetchOrderDetails = createAsyncThunk(
   "orders/fetchOrderDetails",
-  async (orderId, { rejectWithValue }) => {
+  async (id, { getState, rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/api/orders/${orderId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-        }
+      // Try store owner token first, then user token
+      const ownerToken = getState().storeOwnerAuth.token;
+      const userToken = getState().auth.token;
+      const token = ownerToken || userToken;
+      const res = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/api/orders/${id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      return response.data;
-    } catch (error) {
+      return res.data;
+    } catch (err) {
       return rejectWithValue(
-        error.response?.data?.message ||
-          error.message ||
-          "Failed to fetch order details"
+        err.response?.data?.message || "Failed to fetch order details"
       );
     }
   }

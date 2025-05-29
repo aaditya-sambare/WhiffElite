@@ -71,6 +71,16 @@ const checkoutSchema = new mongoose.Schema(
     finalizedAt: {
       type: Date,
     },
+    deliveryCharge: {
+      type: Number,
+      default: 0,
+    },
+    orderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
+    },
+    pickup: { type: String, required: true },
+    destination: { type: String, required: true },
   },
   { timestamps: true }
 );

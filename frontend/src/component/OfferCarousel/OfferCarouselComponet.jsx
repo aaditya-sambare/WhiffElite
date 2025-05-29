@@ -26,7 +26,6 @@ const OfferCarousel = () => {
     arrows: true,
     slidesToShow: 1,
     infinite: true,
-    speed: 1000,
     slidesToShow: 1,
     nextArrow: <NextArrow />,
     prevArrow: <PrevArrow />,
@@ -40,7 +39,6 @@ const OfferCarousel = () => {
     arrows: true,
     slidesToShow: 1,
     infinite: true,
-    speed: 1000,
     slidesToShow: 1,
     nextArrow: <NextArrow />,
     prevArrow: <PrevArrow />,
@@ -55,9 +53,9 @@ const OfferCarousel = () => {
       <div className="lg:hidden">
         <HeroSlider {...settings}>
           {images.map((image, index) => (
-            <div className="w-full h-56 md:h-80 py-3" key={index}>
+            <div className="w-full h-56 md:h-80 py-3 px-2" key={index}>
               <img
-                src={image.backdrop_path} 
+                src={image.backdrop_path}
                 alt="Hero Banner"
                 className="w-full h-full rounded-md object-cover"
               />
@@ -70,7 +68,7 @@ const OfferCarousel = () => {
           {images.map((image, index) => (
             <div className="w-full h-96 px-2 py-3" key={index}>
               <img
-                src={image.backdrop_path} 
+                src={image.backdrop_path}
                 alt="Hero Banner"
                 className="w-full h-90 rounded-md object-cover"
               />
@@ -83,4 +81,3 @@ const OfferCarousel = () => {
 };
 
 export default OfferCarousel;
-

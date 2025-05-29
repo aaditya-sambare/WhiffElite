@@ -9,7 +9,6 @@
 }
 
 #root {
-  max-width: 1340px;
   padding: 0;
   font-family: "Inter", sans-serif;
   font-optical-sizing: auto;
@@ -62,7 +61,6 @@
 .slick-next:before {
   color: black !important;
 }
-
 
 /* Toast Animation Styles */
 @keyframes toast-fade-in {
@@ -120,4 +118,3 @@
 .animate-toast-bounce {
   animation: toast-bounce 0.6s ease-in-out forwards;
 }
-

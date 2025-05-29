@@ -8,6 +8,7 @@ import {
   fetchSimilarProducts,
 } from "../../redux/slice/productSlice";
 import { addToCart } from "../../redux/slice/cartSlice";
+import colorList from "../Color/color";
 
 const ProductDetails = ({ productId }) => {
   const { id } = useParams();
@@ -18,6 +19,7 @@ const ProductDetails = ({ productId }) => {
     (state) => state.products
   );
   const { user, guestId } = useSelector((state) => state.auth);
+  const cart = useSelector((state) => state.cart.cart);
   const [mainImage, setMainImage] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
@@ -52,9 +54,26 @@ const ProductDetails = ({ productId }) => {
       toast.error("Please select a size and color before adding to cart", {
         duration: 1000,
       });
-
       return;
     }
+
+    // --- Store check logic ---
+    // if (
+    //   cart.products.length > 0 &&
+    //   cart.products[0].store && // Ensure store exists in cart
+    //   selectedProduct.store &&
+    //   cart.products[0].store !== selectedProduct.store
+    // ) {
+    //   toast.error(
+    //     "You can only add products from the same store to your cart.",
+    //     {
+    //       duration: 2000,
+    //     }
+    //   );
+    //   return;
+    // }
+    // --- End store check ---
+
     setIsButtonDisabled(true);
 
     dispatch(
@@ -65,6 +84,7 @@ const ProductDetails = ({ productId }) => {
         color: selectedColor,
         guestId,
         userId: user?._id,
+        store: selectedProduct.store,
       })
     )
       .then(() => {
@@ -77,17 +97,23 @@ const ProductDetails = ({ productId }) => {
       });
   };
 
- const handleGoToCart = () => {
-  setIsButtonDisabled(true);
-  setTimeout(() => {
-    toggleCartDrawer();
-    setIsButtonDisabled(false); 
-  }, 500);
-};
+  const handleGoToCart = () => {
+    setIsButtonDisabled(true);
+    setTimeout(() => {
+      toggleCartDrawer();
+      setIsButtonDisabled(false);
+    }, 500);
+  };
 
+  const getColorHex = (name) => {
+    const found = colorList.find(
+      (c) => c.name.toLowerCase() === name.toLowerCase()
+    );
+    return found?.hex || "#ccc"; // fallback to gray if not found
+  };
 
   if (loading) {
-    return <p>Loading..</p>;
+    return <p>Loading...</p>;
   }
 
   if (error) {
@@ -135,7 +161,7 @@ const ProductDetails = ({ productId }) => {
 
                 {/* Mobile Thumbnails */}
                 <div className="md:hidden flex overflow-x-scroll space-x-4">
-                  {selectedProduct.image?.map((image, index) => (
+                  {selectedProduct.images?.map((image, index) => (
                     <img
                       key={index}
                       src={image.url}
@@ -150,7 +176,8 @@ const ProductDetails = ({ productId }) => {
                   ))}
                 </div>
               </div>
-              {/* Placeholder for product info */}
+
+              {/* Product Info */}
               <div className="w-full md:w-[48%]">
                 <h1 className="text-2xl font-bold mb-2">
                   {selectedProduct.name}
@@ -188,65 +215,67 @@ const ProductDetails = ({ productId }) => {
                     </span>
                   )}
 
-                {/* color */}
-                <div className="mb-4 ">
-                  <p className="text-gray-700 ">Color:</p>
-                  <div className="flex gap-2 mt-2">
-                    {selectedProduct.colors?.map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => setSelectedColor(color)}
-                        className={`w-8 h-8 rounded-full border ${
-                          selectedColor === color
-                            ? "border-4 border-black "
-                            : "border-gray-300"
-                        }`}
-                        style={{
-                          backgroundColor: color.toLowerCase(),
-                          filter: "brightness(0.9)",
-                        }}
-                        title={color}
-                      ></button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* size */}
+                {/* Color */}
                 <div className="mb-4">
-                  <p className="text-gray-700">Size:</p>
+                  <p className="text-gray-700">Color:</p>
                   <div className="flex gap-2 mt-2">
-                    {selectedProduct.sizes?.map((size) => {
+                    {selectedProduct.colors?.map((colorName) => {
+                      const colorHex = getColorHex(colorName);
                       return (
                         <button
-                          key={size}
-                          onClick={() => setSelectedSize(size)}
-                          className={`px-4 py-4 rounded border-2 ${
-                            selectedSize === size
-                              ? "bg-black text-white border-black"
-                              : "bg-white border-gray-300"
+                          key={colorName}
+                          onClick={() => setSelectedColor(colorName)}
+                          className={`w-8 h-8 rounded-full border ${
+                            selectedColor === colorName
+                              ? "border-4 border-black"
+                              : "border-gray-300"
                           }`}
-                        >
-                          {size}
-                        </button>
+                          style={{
+                            backgroundColor: colorHex,
+                            filter: "brightness(0.9)",
+                          }}
+                          title={colorName}
+                        ></button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Quantity buttons */}
+                {/* Size */}
+                <div className="mb-4">
+                  <p className="text-gray-700">Size:</p>
+                  <div className="flex gap-2 mt-2">
+                    {selectedProduct.sizes?.map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        className={`px-4 py-4 rounded border-2 ${
+                          selectedSize === size
+                            ? "bg-black text-white border-black"
+                            : "bg-white border-gray-300"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quantity */}
                 <div className="mb-6">
                   <p className="text-gray-700">Quantity:</p>
                   <div className="flex items-center space-x-4 mt-2">
                     <button
                       onClick={() => handleQuantityChange("minus")}
-                      className="px-2 py-1 bg-gray-200 rounded text-lg "
+                      disabled={quantity <= 1}
+                      className="px-2 py-1 bg-gray-200 rounded text-lg"
                     >
                       -
                     </button>
                     <span className="text-lg">{quantity}</span>
                     <button
                       onClick={() => handleQuantityChange("plus")}
-                      className="px-2 py-1 bg-gray-200 rounded text-lg "
+                      className="px-2 py-1 bg-gray-200 rounded text-lg"
                     >
                       +
                     </button>
@@ -266,8 +295,8 @@ const ProductDetails = ({ productId }) => {
                   {isButtonDisabled ? "Adding..." : "ADD TO CART"}
                 </button>
 
-                {/* GO TO CART */}
-                {/* <button
+                {/* Go To Cart
+                <button
                   onClick={handleGoToCart}
                   disabled={isButtonDisabled}
                   className={`border border-black text-black py-2 px-6 rounded w-full mb-4 transition ${
@@ -298,8 +327,10 @@ const ProductDetails = ({ productId }) => {
               </div>
             </div>
 
-            {/* Similar products */}
-            <div className="mt-20">
+            <hr className="mt-7 shadow-sm border border-gray-200 rounded" />
+
+            {/* Similar Products */}
+            <div className="mt-7">
               <h2 className="text-2xl text-center font-medium mb-4">
                 You may also like
               </h2>

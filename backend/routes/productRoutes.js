@@ -1,8 +1,9 @@
 const express = require("express");
 const Product = require("../models/product");
+const Store = require("../models/Store");
 const mongoose = require("mongoose");
 
-const { protect } = require("../middleware/authMiddleware");
+const { protect, protectStoreOwner } = require("../middleware/authMiddleware");
 const { isAdmin } = require("../middleware/roleMiddleware");
 
 const router = express.Router();
@@ -32,6 +33,7 @@ router.post("/", protect, isAdmin, async (req, res) => {
       dimensions,
       weight,
       sku,
+      store,
     } = req.body;
 
     const product = new Product({
@@ -55,6 +57,7 @@ router.post("/", protect, isAdmin, async (req, res) => {
       weight,
       sku,
       user: req.user._id,
+      store,
     });
 
     const createdProduct = await product.save();
@@ -90,6 +93,7 @@ router.put("/:id", protect, isAdmin, async (req, res) => {
       dimensions,
       weight,
       sku,
+      store,
     } = req.body;
 
     const product = await Product.findById(req.params.id);
@@ -120,6 +124,7 @@ router.put("/:id", protect, isAdmin, async (req, res) => {
     product.dimensions = dimensions || product.dimensions;
     product.weight = weight || product.weight;
     product.sku = sku || product.sku;
+    product.store = store || product.store;
 
     //updates product
     const updatedProduct = await product.save();
@@ -241,6 +246,92 @@ router.get("/", async (req, res) => {
     res.status(200).json(products);
   } catch (error) {
     console.error("Fetch Products Error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// @route   GET /api/products/store/:storeId
+// @desc    Get all products for a specific store
+// @access  Public (or protect if needed)
+router.get("/store/:storeId", async (req, res) => {
+  try {
+    const products = await Product.find({ store: req.params.storeId });
+    res.status(200).json(products);
+  } catch (error) {
+    console.error("Fetch Products By Store Error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Add a product (Store Owner)
+router.post("/store/:storeId", protectStoreOwner, async (req, res) => {
+  try {
+    const { storeId } = req.params;
+    const store = await Store.findById(storeId);
+
+    if (!store) return res.status(404).json({ message: "Store not found" });
+
+    // Only allow the owner of the store to add products
+    if (store.storeOwner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const product = new Product({
+      ...req.body,
+      store: storeId,
+      user: req.user._id,
+    });
+
+    await product.save();
+    res.status(201).json(product);
+  } catch (error) {
+    console.error("Add Product Error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Edit a product (Store Owner)
+router.put("/store/:storeId/:productId", protectStoreOwner, async (req, res) => {
+  try {
+    const { storeId, productId } = req.params;
+    const store = await Store.findById(storeId);
+    if (!store) return res.status(404).json({ message: "Store not found" });
+
+    // Only allow the owner of the store to edit products
+    if (store.storeOwner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const product = await Product.findOne({ _id: productId, store: storeId });
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    Object.assign(product, req.body);
+    await product.save();
+    res.json(product);
+  } catch (error) {
+    console.error("Edit Product Error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Delete a product (Store Owner)
+router.delete("/store/:storeId/:productId", protectStoreOwner, async (req, res) => {
+  try {
+    const { storeId, productId } = req.params;
+    const store = await Store.findById(storeId);
+    if (!store) return res.status(404).json({ message: "Store not found" });
+
+    // Only allow the owner of the store to delete products
+    if (store.storeOwner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const product = await Product.findOneAndDelete({ _id: productId, store: storeId });
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    res.json({ message: "Product deleted" });
+  } catch (error) {
+    console.error("Delete Product Error:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 });

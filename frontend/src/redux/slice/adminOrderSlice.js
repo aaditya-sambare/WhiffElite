@@ -80,6 +80,7 @@ const adminOrderSlice = createSlice({
     orders: [],
     totalOrders: 0,
     totalSales: 0,
+    productSales: 0,
     loading: false,
     error: null,
   },
@@ -101,6 +102,19 @@ const adminOrderSlice = createSlice({
           return acc + order.totalPrice;
         }, 0);
         state.totalSales = totalSales;
+
+        // calculate product sales
+        const productSales = action.payload.reduce((acc, order) => {
+          if (!order.orderItems) return acc;
+          return (
+            acc +
+            order.orderItems.reduce(
+              (sum, item) => sum + (item.price * (item.quantity || 1)),
+              0
+            )
+          );
+        }, 0);
+        state.productSales = productSales;
       })
       .addCase(fetchAllOrders.rejected, (state, action) => {
         state.loading = false;

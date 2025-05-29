@@ -12,9 +12,10 @@ const EditProductPage = () => {
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const { id } = useParams();
-  const { selectedProduct, loading, error } = useSelector(
-    (state) => state.products
+  const { products, loading, error } = useSelector(
+    (state) => state.adminProducts
   );
+  const selectedProduct = products.find((p) => p._id === id);
   const [productData, setProductData] = useState({
     name: "",
     description: "",
@@ -57,7 +58,7 @@ const EditProductPage = () => {
     try {
       setUploading(true);
       const { data } = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/api/products`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/upload`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -74,7 +75,7 @@ const EditProductPage = () => {
   };
 
   //Handle submit
-  const handleSubmite = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (productData.price <= 0) {
@@ -92,7 +93,7 @@ const EditProductPage = () => {
       return;
     }
 
-    dispatch(updateProduct({ id, productData }));
+    await dispatch(updateProduct({ id, productData }));
     navigate("/admin/products");
   };
 
@@ -114,7 +115,7 @@ const EditProductPage = () => {
   return (
     <div className="max-w-5xl mx-auto p-6 shadow-md rounded-md">
       <h2 className="text-3xl font-bold mb-6">Edit Product</h2>
-      <form onSubmit={handleSubmite}>
+      <form onSubmit={handleSubmit}>
         {/* Product Name */}
         <div className="mb-6">
           <label className="block font-semibold mb-2">Product Name</label>
@@ -229,7 +230,7 @@ const EditProductPage = () => {
                   alt={image.altText || "Product Image"}
                   className="w-20 h-20 object-cover rounded-md shadow-md"
                 />
-                {/* Add a delete button for images */}
+
                 <button
                   type="button"
                   onClick={() => handleDeleteImage(index)}

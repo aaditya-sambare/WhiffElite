@@ -6,6 +6,7 @@ import {
   fetchAdminProducts,
 } from "../../redux/slice/adminProductSlice";
 import { toast } from "react-toastify";
+import { FiLoader } from "react-icons/fi";
 
 const ProductManagement = () => {
   const navigate = useNavigate();
@@ -14,7 +15,6 @@ const ProductManagement = () => {
     (state) => state.adminProducts
   );
 
-  //Handle delete
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
@@ -26,38 +26,44 @@ const ProductManagement = () => {
     }
   };
 
-  //Handle Click
-  const handleClick = () => {
-    navigate("/admin/products/new");
-  };
-
   useEffect(() => {
     dispatch(fetchAdminProducts());
   }, [dispatch]);
 
-  if (loading) return <p>Loading..</p>;
-  if (error) return <p>Error..{error}</p>;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center min-h-[200px]">
+        <FiLoader className="animate-spin text-4xl text-blue-500" />
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="p-4 bg-red-100 text-red-700 rounded-md shadow mb-6">
+        <strong>Error:</strong> {error}
+      </div>
+    );
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Product Management</h2>
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h2 className="text-2xl font-bold text-gray-800">Product Management</h2>
         <button
-          onClick={handleClick}
-          className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors duration-300"
+          onClick={() => navigate("/admin/products/new")}
+          className="bg-black text-white px-5 py-2 rounded-lg hover:bg-gray-800 transition"
         >
-          Add Product
+          + Add Product
         </button>
       </div>
 
-      <div className="overflow-x-auto shadow-md sm:rounded-lg">
-        <table className="min-w-full text-left text-gray-500">
+      <div className="overflow-x-auto shadow-md sm:rounded-lg bg-white">
+        <table className="min-w-full text-sm text-left text-gray-600">
           <thead className="bg-gray-100 text-xs uppercase text-gray-700">
             <tr>
-              <th className="py-3 px-4">Name</th>
-              <th className="py-3 px-4">Price</th>
-              <th className="py-3 px-4">SKU</th>
-              <th className="py-3 px-4">Action</th>
+              <th className="px-6 py-4">Name</th>
+              <th className="px-6 py-4">Price</th>
+              <th className="px-6 py-4">SKU</th>
+              <th className="px-6 py-4 text-center">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -65,32 +71,32 @@ const ProductManagement = () => {
               products.map((product) => (
                 <tr
                   key={product._id}
-                  className="border-b hover:bg-gray-50 cursor-pointer"
+                  className="border-b hover:bg-gray-50 transition"
                 >
-                  <td className="p-4 font-medium text-gray-900 whitespace-nowrap">
+                  <td className="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">
                     {product.name}
                   </td>
-                  <td className="p-4">₹{product.price}</td>
-                  <td className="p-4">{product.sku}</td>
-                  <td className="p-4">
+                  <td className="px-6 py-4">₹{product.price}</td>
+                  <td className="px-6 py-4">{product.sku}</td>
+                  <td className="px-6 py-4 text-center space-x-2">
                     <Link
                       to={`/admin/products/${product._id}/edit`}
-                      className="bg-yellow-500 text-white px-2 py-1 rounded mr-2 hover:bg-yellow-600"
+                      className="text-xl text-blue-600 transition "
                     >
-                      Edit
+                      <i class="ri-file-edit-fill"></i>
                     </Link>
                     <button
                       onClick={() => handleDelete(product._id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                      className="text-xl text-red-600 transition"
                     >
-                      Delete
+                      <i class="ri-delete-bin-line"></i>
                     </button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="p-4 text-center text-gray-500">
+                <td colSpan={4} className="px-6 py-6 text-center text-gray-500">
                   No products found.
                 </td>
               </tr>

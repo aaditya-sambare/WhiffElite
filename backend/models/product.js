@@ -68,18 +68,21 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    rating: {
-      type: Number,
-      default: 0,
-    },
+  
     numReviews: {
       type: Number,
       default: 0,
     },
     tags: [String],
+    ratings: [{ type: Number, min: 1, max: 5 }],
     user: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
+      required: true,
+    },
+    store: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
       required: true,
     },
     metaTitle: {

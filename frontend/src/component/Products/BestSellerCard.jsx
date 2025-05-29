@@ -10,7 +10,7 @@ const BestSellerCard = ({ product }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex justify-center items-center rounded-lg bg-gray-100 p-20">
+    <div className="flex justify-center items-center rounded-lg bg-gray-100 p-4 sm:p-8">
       {/* Toast Notification */}
       {toastVisible && (
         <div
@@ -26,7 +26,7 @@ const BestSellerCard = ({ product }) => {
 
       <div className="flex flex-col md:flex-row w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden bg-transparent transform transition-transform hover:scale-105 duration-500">
         {/* Left: Product Image */}
-        <div className="md:w-1/2 w-full h-96 relative group">
+        <div className="w-full md:w-1/2 h-64 md:h-96 relative group">
           <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-full text-xs font-semibold transform scale-0 group-hover:scale-100 transition-all duration-300 ease-in-out">
             SALE
           </div>
@@ -38,26 +38,24 @@ const BestSellerCard = ({ product }) => {
         </div>
 
         {/* Right: Product Info */}
-        <div className="md:w-1/2 w-full p-8 flex flex-col justify-between">
+        <div className="w-full md:w-1/2 p-6 flex flex-col justify-between">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-3">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3">
               {product?.name}
             </h2>
-            <p className="text-red-500 font-semibold text-2xl mb-4">
-              ₹{product?.price}
-              {product?.discountPrice && (
+            <p className="text-red-500 font-semibold text-xl sm:text-2xl mb-4">
+              ₹{product?.discountPrice}
+              {product?.price && (
                 <span className="text-gray-400 line-through text-lg ml-2">
-                  ₹{product.discountPrice}
+                  ₹{product.price}
                 </span>
-              )}
-              {" "}
+              )}{" "}
               {/* Save % badge */}
               {product.discountPrice && (
                 <span className="text-green-600 bg-green-100 text-sm font-semibold px-2 py-1 rounded">
                   Save{" "}
                   {Math.round(
-                    ((product.price - product.discountPrice) /
-                      product.price) *
+                    ((product.price - product.discountPrice) / product.price) *
                       100
                   )}
                   %
@@ -65,45 +63,48 @@ const BestSellerCard = ({ product }) => {
               )}
             </p>
 
-            <p className="text-gray-600 text-sm mb-6">{product?.description}</p>
-
-            {/* Colors */}
-            <div className="mb-4">
-              <p className="text-gray-700 text-lg mb-2">Colors:</p>
-              <div className="flex gap-2">
-                {product?.colors?.map((color) => (
-                  <div
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    className={`w-8 h-8 rounded-full border cursor-pointer transform hover:scale-110 transition-all duration-300 ${
-                      selectedColor === color
-                        ? "border-4 border-black"
-                        : "border-gray-300"
-                    }`}
-                    style={{
-                      backgroundColor: color.toLowerCase(),
-                      filter: "brightness(0.9)",
-                    }}
-                  ></div>
-                ))}
+            <p className="text-gray-600 text-sm sm:text-base mb-6">
+              {product?.description}
+            </p>
+            <div className="">
+              {/* Colors */}
+              <div className="mb-4 sm:block hidden">
+                <p className="text-gray-700 text-lg mb-2">Colors:</p>
+                <div className="flex gap-2 flex-wrap">
+                  {product?.colors?.map((color) => (
+                    <div
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      className={`w-8 h-8 rounded-full border cursor-pointer transform hover:scale-110 transition-all duration-300 ${
+                        selectedColor === color
+                          ? "border-4 border-black"
+                          : "border-gray-300"
+                      }`}
+                      style={{
+                        backgroundColor: color.toLowerCase(),
+                        filter: "brightness(0.9)",
+                      }}
+                    ></div>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Sizes */}
-            <div className="mb-6">
-              <p className="text-gray-700 text-lg mb-2">Sizes:</p>
-              <div className="flex gap-2">
-                {product?.sizes?.map((size) => (
-                  <span
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`text-xs border border-gray-300 rounded px-4 py-2 font-semibold cursor-pointer transform hover:scale-105 transition-all duration-300 ${
-                      selectedSize === size ? "bg-black text-white" : ""
-                    }`}
-                  >
-                    {size}
-                  </span>
-                ))}
+              {/* Sizes */}
+              <div className="mb-6 sm:block hidden">
+                <p className="text-gray-700 text-lg mb-2">Sizes:</p>
+                <div className="flex gap-2 flex-wrap">
+                  {product?.sizes?.map((size) => (
+                    <span
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`text-xs sm:text-sm border border-gray-300 rounded px-4 py-2 font-semibold cursor-pointer transform hover:scale-105 transition-all duration-300 ${
+                        selectedSize === size ? "bg-black text-white" : ""
+                      }`}
+                    >
+                      {size}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

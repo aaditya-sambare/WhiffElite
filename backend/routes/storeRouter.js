@@ -1,18 +1,22 @@
 const express = require("express");
 const router = express.Router();
 const Store = require("../models/Store");
+const path = require("path");
 
-const { protect } = require("../middleware/authMiddleware");
+const {
+  protect,
+  protectAdminOrStoreOwner,
+} = require("../middleware/authMiddleware");
 const { isAdmin } = require("../middleware/roleMiddleware");
+const storeOwner = require("../models/storeOwner");
 
 // @route   POST /api/stores
 // @desc    Create a new store
-// @access  Private/Admin
-router.post("/", protect, isAdmin, async (req, res) => {
+// @access  Private/Admin or StoreOwner
+router.post("/", protectAdminOrStoreOwner, async (req, res) => {
   try {
     const { name, city, state, address, contact, landmark, image } = req.body;
-
-    if (!name || !city || !state || !address || !landmark || !image) {
+    if (!name || !city || !state || !address || !landmark) {
       return res
         .status(400)
         .json({ message: "Please fill all required fields" });
@@ -26,10 +30,20 @@ router.post("/", protect, isAdmin, async (req, res) => {
       contact,
       landmark,
       image,
-      user: req.user._id, 
+      user: req.user._id,
+      storeOwner: req.user._id,
     });
 
     const savedStore = await newStore.save();
+
+    // Add the store to the store owner's stores array
+    const StoreOwner = require("../models/storeOwner");
+    await StoreOwner.findByIdAndUpdate(
+      req.user._id,
+      { $push: { stores: savedStore._id } },
+      { new: true }
+    );
+
     res.status(201).json(savedStore);
   } catch (error) {
     console.error("Error creating store:", error);
@@ -95,7 +109,7 @@ router.get("/", async (req, res) => {
 
     // Build dynamic filter
     const filter = {};
-    if (city) filter.city = new RegExp(city, "i"); 
+    if (city) filter.city = new RegExp(city, "i");
     if (state) filter.state = new RegExp(state, "i");
 
     const stores = await Store.find(filter);
@@ -106,23 +120,41 @@ router.get("/", async (req, res) => {
   }
 });
 
-
 //@route GET /api/stores/:id
 //@desc Get a store with its products
 //@access Public
 router.get("/:id", async (req, res) => {
   try {
     const store = await Store.findById(req.params.id)
-      .populate("products") 
+      .populate("products")
       .exec();
 
     if (!store) {
       return res.status(404).json({ message: "Store not found" });
     }
 
-    res.json(store); 
+    res.json(store);
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// GET store location by ID
+router.get("/location/:id", async (req, res) => {
+  try {
+    const store = await Store.findById(req.params.id);
+
+    if (!store) {
+      return res
+        .status(404)
+        .json({ message: `Store with ID ${req.params.id} not found` });
+    }
+
+    const fullAddress = `${store.address}, ${store.landmark}, ${store.city}, ${store.state}`;
+    res.status(200).json({ address: fullAddress });
+  } catch (error) {
+    console.error("Failed to fetch store address:", error);
     res.status(500).json({ message: "Server error" });
   }
 });

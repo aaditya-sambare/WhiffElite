@@ -11,7 +11,7 @@ const CartContent = ({ cart, userId, guestId }) => {
   const [loadingImages, setLoadingImages] = useState(true);
 
   // Handle adding and subtracting cart quantity
-  const handleToCart = (productId, delta, quantity, size, color) => {
+  const handleToCart = (productId, delta, quantity, size, color, store) => {
     const newQuantity = quantity + delta;
     if (newQuantity >= 1) {
       dispatch(
@@ -22,14 +22,24 @@ const CartContent = ({ cart, userId, guestId }) => {
           userId,
           size,
           color,
+          storeId: store,
         })
       );
     }
   };
 
-  //Handle removal of proudct from cart
-  const handleRemoveFromCart = (productId, size, color) => {
-    dispatch(removeFromCart({ productId, guestId, userId, size, color }));
+  // Handle removal of product from cart
+  const handleRemoveFromCart = (productId, size, color, store) => {
+    dispatch(
+      removeFromCart({
+        productId,
+        guestId,
+        userId,
+        size,
+        color,
+        storeId: store,
+      })
+    );
   };
 
   // Handle image load and error
@@ -42,6 +52,14 @@ const CartContent = ({ cart, userId, guestId }) => {
     const quantity = product.quantity || 1;
     return total + price * quantity;
   }, 0);
+
+  // Function to handle the button state for increase/decrease quantity
+  const getButtonClass = (quantity, delta) => {
+    if (delta === -1 && quantity === 1) {
+      return "cursor-not-allowed border rounded px-3 py-1 text-lg font-medium";
+    }
+    return "border rounded px-3 py-1 text-lg font-medium";
+  };
 
   return (
     <div className="p-4 h-full flex flex-col justify-between">
@@ -58,13 +76,16 @@ const CartContent = ({ cart, userId, guestId }) => {
           <p>Your cart is empty!</p>
         ) : (
           cart.products.map((product) => (
-            <div key={product.productId} className="flex items-center mb-4">
+            <div
+              key={product.productId}
+              className="flex flex-col sm:flex-row sm:items-center mb-4 sm:mb-6"
+            >
               {/* Image */}
-              <div>
+              <div className="w-full sm:w-24 sm:h-32 mb-4 sm:mb-0">
                 <img
                   src={product.image}
                   alt={product.name}
-                  className="w-20 h-24 object-cover rounded"
+                  className="w-full h-full object-cover rounded"
                   onLoad={handleImageLoad}
                   onError={handleImageError}
                 />
@@ -72,7 +93,9 @@ const CartContent = ({ cart, userId, guestId }) => {
 
               {/* Info */}
               <div className="flex-1 px-4">
-                <h3 className="font-semibold">{product.name}</h3>
+                <h3 className="font-semibold text-base sm:text-lg">
+                  {product.name}
+                </h3>
                 <p className="text-sm text-gray-500 mb-2">
                   Size: {product.size} | Color: {product.color}
                 </p>
@@ -86,14 +109,11 @@ const CartContent = ({ cart, userId, guestId }) => {
                         -1,
                         product.quantity,
                         product.size,
-                        product.color
+                        product.color,
+                        product.store
                       )
                     }
-                    className={`border rounded px-3 py-1 text-lg font-medium ${
-                      product.quantity === 1
-                        ? "cursor-not-allowed text-gray-400 border-gray-300"
-                        : ""
-                    }`}
+                    className={getButtonClass(product.quantity, -1)}
                     aria-label="Decrease quantity"
                   >
                     -
@@ -106,7 +126,8 @@ const CartContent = ({ cart, userId, guestId }) => {
                         1,
                         product.quantity,
                         product.size,
-                        product.color
+                        product.color,
+                        product.store
                       )
                     }
                     className="border rounded px-3 py-1 text-lg font-medium"
@@ -118,7 +139,7 @@ const CartContent = ({ cart, userId, guestId }) => {
               </div>
 
               {/* Price */}
-              <div className="text-right">
+              <div className="text-right mt-4 sm:mt-0 sm:text-right">
                 <p className="text-md font-semibold">
                   ₹{parseFloat(product.price).toFixed(2)}
                 </p>
@@ -127,12 +148,14 @@ const CartContent = ({ cart, userId, guestId }) => {
                     handleRemoveFromCart(
                       product.productId,
                       product.size,
-                      product.color
+                      product.color,
+                      product.store
                     )
                   }
                   aria-label="Remove product"
+                  className="mt-2 sm:mt-4"
                 >
-                  <RiDeleteBin3Line className="h-6 w-6 mt-2 text-red-600" />
+                  <RiDeleteBin3Line className="h-6 w-6 text-red-600" />
                 </button>
               </div>
             </div>
@@ -142,7 +165,7 @@ const CartContent = ({ cart, userId, guestId }) => {
 
       {/* Subtotal */}
       <div className="border-t pt-4 mt-4">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-center sm:items-baseline">
           <h2 className="font-semibold text-lg">Subtotal:</h2>
           <p className="text-lg font-bold">₹{subtotal.toFixed(2)}</p>
         </div>

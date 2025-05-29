@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProductByFilters } from "../redux/slice/productSlice";
@@ -8,6 +8,8 @@ import TopShopCardSlider from "../component/TopShop/TopShopCardComponent";
 import GenderCollectionSection from "../component/Products/GenderCollectionSection";
 import ProductGrid from "../component/Products/ProductGrid";
 import BestSellerCard from "../component/Products/BestSellerCard";
+
+import { SocketContext } from "../context/SocketContext";
 
 // Fetch best seller product
 const fetchBestSeller = async () => {
@@ -42,6 +44,23 @@ const HomePage = () => {
   const [menProducts, setMenProducts] = useState([]);
   const [bestSellerLoading, setBestSellerLoading] = useState(true);
   const [menLoading, setMenLoading] = useState(true);
+  const { user } = useSelector((state) => state.auth);
+  const { sendMessage, receiveMessage } = useContext(SocketContext);
+
+  useEffect(() => {
+    // Check if 'userInfo' exists in localStorage and parse it if necessary
+    const userInfo = localStorage.getItem("userInfo");
+    if (userInfo) {
+      const parsedUserInfo = JSON.parse(userInfo); // If it's a stringified object
+      console.log(parsedUserInfo); // Log parsed user info for debugging
+
+      // Send message to WebSocket
+      sendMessage("join", {
+        userType: "user",
+        userId: parsedUserInfo._id, // Assuming _id is part of the user data
+      });
+    }
+  }, []);
 
   useEffect(() => {
     dispatch(fetchProductByFilters({ gender: "Women", limit: 8 }));
@@ -75,7 +94,7 @@ const HomePage = () => {
   return (
     <>
       {/* Near by store */}
-      <div className="container mx-auto px-4 md:px-12 my-8">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 my-8">
         <h1 className="text-3xl font-bold text-gray-800 sm:ml-3 ml-0 my-3">
           Popular Store
         </h1>

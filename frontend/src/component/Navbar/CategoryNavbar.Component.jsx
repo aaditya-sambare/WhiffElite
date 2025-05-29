@@ -1,29 +1,26 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { BiChevronDown } from "react-icons/bi";
+import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faPerson,
+  faMale,
   faPersonDress,
   faChild,
   faChildDress,
 } from "@fortawesome/free-solid-svg-icons";
+import { BiChevronDown } from "react-icons/bi";
+import { Link } from "react-router-dom";
 
-// Define categories
 const categories = [
   {
     name: "Men",
     path: "/collections/all?gender=Men",
+    icon: faMale,
     subcategories: [
       { name: "Shirts", path: "/collections/all?gender=Men&category=Shirt" },
       {
         name: "Trousers",
         path: "/collections/all?gender=Men&category=Trouser",
       },
-      {
-        name: "Jackets",
-        path: "/collections/all?gender=Men&category=Jacket",
-      },
+      { name: "Jackets", path: "/collections/all?gender=Men&category=Jacket" },
     ],
   },
   {
@@ -72,31 +69,51 @@ const categories = [
 
 const CategoryNavbar = () => {
   const [openDropdown, setOpenDropdown] = useState(null);
+  const dropdownRef = useRef(null);
 
   const toggleDropdown = (categoryName) => {
     setOpenDropdown((prev) => (prev === categoryName ? null : categoryName));
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <>
-      <div className="bg-white h-1 w-full"></div>
+      <div className="bg-white  w-full pt-1"></div>
 
-      <nav className="bg-black shadow-md">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-center items-center h-16 space-x-8 ">
+      <nav className="bg-black shadow-md ">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4">
+          <div
+            ref={dropdownRef}
+            className="flex justify-between sm:justify-center items-center h-14 flex-wrap gap-x-2 gap-y-2 sm:gap-x-4"
+          >
             {categories.map((category) => (
               <div key={category.name} className="relative">
                 <button
                   onClick={() => toggleDropdown(category.name)}
-                  className="flex items-center text-gray-200 hover:text-white focus:outline-none"
+                  className="flex items-center gap-1 text-[13px] sm:text-sm px-2 py-1 text-gray-200 hover:text-white"
                 >
-                  <FontAwesomeIcon icon={category.icon} className="mr-2" />
-                  {category.name}
-                  <BiChevronDown className="ml-1" />
+                  <FontAwesomeIcon
+                    icon={category.icon}
+                    className="text-[14px] sm:text-base"
+                  />
+                  <span>{category.name}</span>
+                  <BiChevronDown className="text-sm sm:text-base" />
                 </button>
 
                 {openDropdown === category.name && (
-                  <div className="absolute left-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-10 focus:outline-none">
+                  <div
+                    id={`dropdown-${category.name}`}
+                    className="absolute left-1/2 -translate-x-1/2 mt-2 w-40 bg-white border rounded-md shadow-lg z-10"
+                  >
                     {category.subcategories.map((sub) => (
                       <Link
                         key={sub.name}

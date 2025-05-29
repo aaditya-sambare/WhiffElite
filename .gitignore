@@ -7,8 +7,10 @@ Thumbs.db
 *.swp
 
 # Environment variables
-.env
-.env.*.local
+frontend/.env   
+backend/.env
+
+
 
 # ===============================
 # Node Dependencies
@@ -59,3 +61,5 @@ nyc_output/
 # MongoDB Dumps
 # ===============================
 dump/
+
+.DS_Store

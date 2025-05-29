@@ -73,8 +73,29 @@ const orderSchema = new mongoose.Schema(
       set: (value) =>
         value.charAt(0).toUpperCase() + value.slice(1).toLowerCase(),
     },
+    captain: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Captain",
+      default: null,
+    },
+    ride: { type: mongoose.Schema.Types.ObjectId, ref: "Ride" },
+
+    checkoutId: {
+      type: String,
+      required: false,
+    },
+    pickup: { type: String, required: true },
+    destination: { type: String, required: true },
+    estimatedDelivery: {
+      type: Date,
+    },
+    orderRated: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("order", orderSchema);
+module.exports = mongoose.model("Order", orderSchema);
+

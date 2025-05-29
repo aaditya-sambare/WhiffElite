@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
+
 // Fetch all products (admin only)
 export const fetchAdminProducts = createAsyncThunk(
   "admin/fetchAdminProducts",
@@ -122,3 +123,5 @@ const adminProductSlice = createSlice({
 });
 
 export default adminProductSlice.reducer;
+
+

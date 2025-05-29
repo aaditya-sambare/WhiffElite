@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const userSchema = new mongoose.Schema(
   {
@@ -10,7 +11,6 @@ const userSchema = new mongoose.Schema(
     },
     lastname: {
       type: String,
-      
       trim: true,
     },
     email: {
@@ -18,12 +18,19 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
-      match: [/.+\@.+\..+/, "Please enter a valid email address"],
+      // match: [/.+\@.+\..+/, "Please enter a valid email address"],
+      validate: {
+        validator: function (v) {
+          return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v);
+        },
+        message: (props) => `${props.value} is not a valid email!`,
+      },
     },
     password: {
       type: String,
       required: true,
       minLength: [8, "Password must be atleast 8 character long"],
+      select: false,
     },
     contact: {
       type: String,
@@ -33,36 +40,38 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["customer", "admin", "store", "delivery"],
+      enum: ["customer", "admin", "storeowner", "captain"],
       default: "customer",
     },
     socketId: {
       type: String,
     },
-    isOnline: {
-      type: Boolean,
-      default: false,
+    profileImage: {
+      type: String,
+      default: "https://ui-avatars.com/api/?name=User", // or your default image URL
     },
-    isBusy: {
-      type: Boolean,
-      default: false,
+    location: {
+      type: { type: String, enum: ["Point"], default: "Point" },
+      coordinates: { type: [Number], default: [0, 0] }, // [lng, lat]
+      name: { type: String, default: "" },
     },
   },
   { timestamps: true }
 );
 
-// password hash middleware
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
+//generate auth token
+userSchema.methods.generateAuthToken = function () {
+  const token = jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+    expiresIn: "24h",
+  });
+  return token;
+};
 
+// password hash middleware
+userSchema.statics.hashPassword = async function (password) {
+  const salt = await bcrypt.genSalt(10);
+  return await bcrypt.hash(password, salt);
+};
 
 // method to compare entered password with hashed password
 userSchema.methods.matchPassword = async function (enteredPassword) {

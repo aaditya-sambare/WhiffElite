@@ -40,11 +40,11 @@ export const addUser = createAsyncThunk(
 // update a user (admin only)
 export const updateUser = createAsyncThunk(
   "admin/updateUser",
-  async ({ id, name, email, role }, { rejectWithValue }) => {
+  async ({ id, name, email, role, type }, { rejectWithValue }) => {
     try {
       const response = await axios.put(
         `${process.env.REACT_APP_BACKEND_URL}/api/admin/users/${id}`,
-        { name, email, role },
+        { name, email, role, type },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("userToken")}`,
@@ -63,13 +63,14 @@ export const updateUser = createAsyncThunk(
 );
 
 // delete a user (admin only)
-export const deleteUser = createAsyncThunk("admin/deleteUser", async (id) => {
+export const deleteUser = createAsyncThunk("admin/deleteUser", async ({ id, type }) => {
   await axios.delete(
     `${process.env.REACT_APP_BACKEND_URL}/api/admin/users/${id}`,
     {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("userToken")}`,
       },
+      data: { type },
     }
   );
   return id;
