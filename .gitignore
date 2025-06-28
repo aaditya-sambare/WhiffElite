@@ -1,0 +1,65 @@
+# ===============================
+# Global
+# ===============================
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+
+# Environment variables
+frontend/.env   
+backend/.env
+
+
+
+# ===============================
+# Node Dependencies
+# ===============================
+backend/node_modules/
+frontend/node_modules/
+
+# ===============================
+# Build Artifacts
+# ===============================
+frontend/build/
+frontend/dist/
+backend/dist/
+
+# ===============================
+# Cache Directories
+# ===============================
+frontend/.cache/
+backend/.cache/
+frontend/.next/
+frontend/.turbo/
+frontend/.vite/
+
+# ===============================
+# Logs
+# ===============================
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# ===============================
+# Test & Coverage
+# ===============================
+coverage/
+frontend/coverage/
+backend/coverage/
+jest/
+nyc_output/
+
+# ===============================
+# IDEs & Editors
+# ===============================
+.vscode/
+.idea/
+
+# ===============================
+# MongoDB Dumps
+# ===============================
+dump/
+
+.DS_Store
