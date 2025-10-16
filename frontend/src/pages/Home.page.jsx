@@ -52,7 +52,6 @@ const HomePage = () => {
     const userInfo = localStorage.getItem("userInfo");
     if (userInfo) {
       const parsedUserInfo = JSON.parse(userInfo); // If it's a stringified object
-      console.log(parsedUserInfo); // Log parsed user info for debugging
 
       // Send message to WebSocket
       sendMessage("join", {

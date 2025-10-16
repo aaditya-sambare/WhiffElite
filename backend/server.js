@@ -22,6 +22,7 @@ const mapRoutes = require("./routes/mapsRoutes");
 const rideRoutes = require("./routes/rideRoutes");
 const storeOwnerRoutes = require("./routes/storeOwnerRoutes");
 const adminStoreRoute = require("./routes/adminStoreRoute");
+const offerRoutes = require("./routes/offerRoutes");
 
 const connectDB = require("./config/db");
 const { initializeSocket } = require("./socket");
@@ -30,10 +31,7 @@ const app = express();
 
 // CORS Configuration
 const corsOptions = {
-  origin: [
-    "http://localhost:3000",
-    "https://whiffelite.vercel.app"
-  ],
+  origin: ["http://localhost:3000", "https://whiffelite.vercel.app"],
   credentials: true, // Allow credentials (cookies, HTTP authentication)
 };
 
@@ -74,6 +72,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/admin/products", productAdminRoutes);
 app.use("/api/admin/orders", orderAdminRoutes);
 app.use("/api/admin/stores", adminStoreRoute);
+app.use("/api/admin/offers", offerRoutes);
 
 // Map routes
 app.use("/api/maps", mapRoutes);

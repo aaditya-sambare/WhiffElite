@@ -29,26 +29,24 @@ const Profile = () => {
     }
   }, [user, navigate]);
 
-  // Check screen width for mobile
   const isMobile = window.innerWidth < 768;
 
-  // Animate sidebar for mobile only
   useEffect(() => {
-    if (sidebarOpen && isMobile) {
-      gsap.to(".sidebar", { duration: 0.5, x: 0, ease: "power3.out" });
-    } else if (isMobile) {
-      gsap.to(".sidebar", { duration: 0.5, x: -250, ease: "power3.in" });
-    }
+    if (!sidebarRef.current || !isMobile) return;
+    gsap.to(sidebarRef.current, {
+      x: sidebarOpen ? 0 : -300,
+      duration: 0.4,
+      ease: "power3.inOut",
+    });
   }, [sidebarOpen, isMobile]);
 
-  // Close drawer on outside click (mobile only)
   useEffect(() => {
     if (!sidebarOpen) return;
     function handleClickOutside(event) {
       if (
         sidebarRef.current &&
         !sidebarRef.current.contains(event.target) &&
-        window.innerWidth < 768
+        isMobile
       ) {
         setSidebarOpen(false);
       }
@@ -77,7 +75,7 @@ const Profile = () => {
 
   return (
     <div className="flex h-screen bg-white text-black relative">
-      {/* Overlay for mobile drawer */}
+      {/* Overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-30 z-30 md:hidden"
@@ -85,50 +83,39 @@ const Profile = () => {
         />
       )}
 
-      {/* Sidebar (Drawer) */}
+      {/* Sidebar */}
       <aside
         ref={sidebarRef}
-        className={`
-          sidebar fixed md:relative z-40 md:z-10 top-0 left-0 h-full w-64 border-r px-6 py-8 bg-gray-50 shadow-sm
-          transition-transform transform
-          -translate-x-full md:translate-x-0
-        `}
-        style={{
-          // Keep sidebar open on md+ screens
-          transform:
-            sidebarOpen || window.innerWidth >= 768
-              ? "translateX(0)"
-              : "translateX(-100%)",
-        }}
+        className="fixed z-40 md:relative top-0 left-0 h-full w-64 bg-gray-50 border-r px-6 py-8 shadow-md md:translate-x-0 transform -translate-x-full"
       >
         <div className="flex flex-col items-center text-center mb-10">
-          {profile.profileImage ? (
-            <img
-              src={profile.profileImage}
-              alt="Profile"
-              className="h-24 w-24 rounded object-cover shadow"
-            />
-          ) : (
-            <FaUser className="text-5xl mb-2 text-gray-400" />
-          )}
-
-          <h2 className="text-lg font-bold mt-2">
-            Hello,{" "}
+          <div className="relative w-24 h-24">
+            {profile.profileImage ? (
+              <img
+                src={profile.profileImage}
+                alt="Profile"
+                className="h-24 w-24 rounded-full object-cover shadow-lg border-4 border-blue-100"
+              />
+            ) : (
+              <FaUser className="text-5xl text-gray-400 bg-blue-50 rounded-full p-4" />
+            )}
+          </div>
+          <h2 className="text-lg font-bold mt-3">
             {profile.firstname
               ? profile.firstname.toUpperCase()
               : profile.email || "Guest"}
           </h2>
-          <span className="text-sm text-blue-600 underline cursor-pointer">
-            View Details
-          </span>
+          <button className="mt-1 text-sm text-blue-600 hover:underline">
+            <FaInfoCircle className="inline mr-1" /> View Details
+          </button>
         </div>
 
-        <nav className="space-y-4 text-m">
+        <nav className="space-y-3">
           {sidebarItems.map((item, idx) => (
             <Link
               key={idx}
               to={item.path}
-              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-100 transition"
+              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-100 transition text-sm font-medium text-gray-700"
               onClick={() => setSidebarOpen(false)}
             >
               <span className="text-blue-600">{item.icon}</span>
@@ -138,81 +125,60 @@ const Profile = () => {
         </nav>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 p-4 sm:p-6 md:p-12 overflow-auto bg-white">
-        {/* Sidebar Toggle Button (mobile only) */}
+      {/* Main */}
+      <main className="flex-1 p-4 sm:p-6 md:p-12 overflow-auto bg-white relative">
+        {/* Toggle Button */}
         {!sidebarOpen && (
           <button
-            className="md:hidden text-black text-3xl font-semibold absolute top-5 left-6"
+            className="md:hidden text-black text-3xl absolute top-5 left-6"
             onClick={() => setSidebarOpen(true)}
           >
-            <i className="ri-menu-fold-2-line"></i>
+            <i className="ri-menu-line"></i>
           </button>
         )}
 
-        {/* Logout and Profile Title in One Line */}
-        <div className="flex items-center justify-between mb-4 mt-2">
-          <h1 className="text-2xl font-semibold text-gray-800 pl-12 sm:pl-0">
-            Profile Details
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 mt-4 px-2">
+          <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+            <FaUser className="mr-2 text-blue-600" />
+            Profile
           </h1>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 text-red-600 hover:text-red-800 transition"
+            className="flex items-center gap-2 text-red-600 hover:text-red-700 transition text-sm"
           >
             <FaSignOutAlt className="text-lg" />
-            <span>Logout</span>
+            Logout
           </button>
         </div>
 
-        <div className="bg-gray-50 border rounded-lg shadow-sm p-4 sm:p-6 max-w-4xl mx-auto">
+        {/* Profile Card */}
+        <div className="bg-gradient-to-br from-white to-gray-50 border rounded-xl shadow-md p-6 sm:p-8 max-w-4xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">
-                First Name
-              </label>
-              <input
-                type="text"
-                value={profile.firstname || ""}
-                disabled
-                className="w-full p-3 border rounded bg-gray-100"
-              />
-            </div>
+            {[
+              { label: "First Name", value: profile.firstname },
+              { label: "Last Name", value: profile.lastname },
+              { label: "Email", value: profile.email },
+              { label: "Mobile Number", value: profile.contact },
+            ].map((item, i) => (
+              <div key={i}>
+                <label className="block mb-1 text-sm font-semibold text-gray-700">
+                  {item.label}
+                </label>
+                <input
+                  type="text"
+                  value={item.value || ""}
+                  disabled
+                  className="w-full p-3 border rounded-lg bg-gray-100 focus:outline-none text-gray-800"
+                />
+              </div>
+            ))}
+          </div>
 
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">
-                Last Name
-              </label>
-              <input
-                type="text"
-                value={profile.lastname || ""}
-                disabled
-                className="w-full p-3 border rounded bg-gray-100"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                type="email"
-                value={profile.email || ""}
-                disabled
-                className="w-full p-3 border rounded bg-gray-100"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">
-                Mobile Number
-              </label>
-              <input
-                type="text"
-                value={profile.contact || ""}
-                disabled
-                className="w-full p-3 border rounded bg-gray-100"
-              />
-            </div>
+          <div className="mt-6 flex justify-end">
+            <button className="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition text-sm font-medium">
+              Edit Profile
+            </button>
           </div>
         </div>
       </main>
