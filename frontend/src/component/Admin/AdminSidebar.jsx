@@ -6,6 +6,7 @@ import {
   FaSignOutAlt,
   FaStore,
   FaUser,
+  FaGift,
 } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import { Link, NavLink, useNavigate } from "react-router-dom";
@@ -86,6 +87,18 @@ const AdminSidebar = () => {
         >
           <FaStore aria-label="Store" />
           <span>Store</span>
+        </NavLink>
+
+        <NavLink
+          to="/admin/offers"
+          className={({ isActive }) =>
+            isActive
+              ? "bg-gray-700 text-white py-6 px-4 rounded flex items-center space-x-2 transition-all duration-300"
+              : "text-gray-300 hover:bg-gray-700 py-3 px-4 rounded flex items-center space-x-2 transition-all duration-300"
+          }
+        >
+          <FaGift aria-label="Offers" />
+          <span>Offers</span>
         </NavLink>
 
         <NavLink

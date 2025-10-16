@@ -59,6 +59,7 @@ import StoreAddProduct from "./component/StoreOwner/storeAddProduct";
 import StoreEditProduct from "./component/StoreOwner/storeEditProduct";
 import AddStoreForm from "./component/StoreOwner/storeAddStore";
 import Live from "./pages/live";
+import OfferManagement from "./component/Admin/OfferManagement";
 
 function App() {
   return (
@@ -126,6 +127,7 @@ function App() {
               <Route path="orders" element={<OrderManagement />} />
               <Route path="products/new" element={<AddProductForm />} />
               <Route path="store" element={<StoreManagement />} />
+              <Route path="/admin/offers" element={<OfferManagement />} />
             </Route>
 
             {/* Store Owner Routes */}

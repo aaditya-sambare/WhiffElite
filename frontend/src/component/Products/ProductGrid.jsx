@@ -5,7 +5,7 @@ const ProductGrid = ({ products, loading, error }) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <div className="w-16 h-16 border-4 border-t-4 border-gray-500 rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -16,7 +16,7 @@ const ProductGrid = ({ products, loading, error }) => {
         <p className="text-xl text-red-600">Error: {error}</p>
         <button
           onClick={() => window.location.reload()}
-          className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-md"
+          className="mt-4 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
         >
           Retry
         </button>
@@ -25,32 +25,41 @@ const ProductGrid = ({ products, loading, error }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 p-2 sm:p-4">
       {products.map((product, index) => (
-        <Link key={index} to={`/product/${product._id}`} className="block">
-          <div className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-transform transform hover:scale-105 hover:z-10">
-            <div className="w-full h-96 mb-4">
-              {/* Ensure images exist before trying to access them */}
-              {product.images &&
-              Array.isArray(product.images) &&
-              product.images.length > 0 ? (
+        <Link
+          key={index}
+          to={`/product/${product._id}`}
+          className="block group"
+        >
+          <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm hover:shadow-lg transition-transform transform hover:scale-[1.02]">
+            <div className="w-full aspect-[4/5] overflow-hidden rounded-lg mb-3 bg-gray-100">
+              {product.images?.[0]?.url ? (
                 <img
                   src={product.images[0].url}
                   alt={product.images[0].altText || product.name}
-                  title={product.name} // Optional title for extra context
-                  className="w-full h-full object-cover rounded-lg"
+                  title={product.name}
+                  className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
                 />
               ) : (
-                <div className="w-full h-full bg-gray-300 rounded-lg flex items-center justify-center">
-                  <span>No Image Available</span>
+                <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">
+                  No Image
                 </div>
               )}
             </div>
-            <h3 className="text-sm mb-2 text-black font-semibold">
+
+            <h3 className="text-sm sm:text-base font-medium text-gray-900 truncate">
               {product.name}
             </h3>
-            <p className="text-gray-500 font-semibold text-sm tracking-tighter">
+
+            <p className="text-sm sm:text-base font-semibold text-red-600 mt-1">
               ₹{product.discountPrice || product.price}
+              {product.discountPrice &&
+                product.discountPrice < product.price && (
+                  <span className="ml-2 text-gray-400 line-through text-xs sm:text-sm">
+                    ₹{product.price}
+                  </span>
+                )}
             </p>
           </div>
         </Link>

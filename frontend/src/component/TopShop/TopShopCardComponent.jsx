@@ -72,6 +72,8 @@ const TopShopCardSlider = () => {
     );
   }, []);
 
+  console.log("nearbyStores", nearbyStores);
+
   const settings = {
     infinite: false,
     autoplay: false,
@@ -112,7 +114,6 @@ const TopShopCardSlider = () => {
       </div>
     );
   }
-  
 
   if (nearbyStores.length === 0) {
     return (

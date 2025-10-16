@@ -43,50 +43,58 @@ const CollectionPage = () => {
   }, [isSidebarOpen]);
 
   return (
-    <div className="relative lg:flex bg-gray-50 min-h-screen">
-      {/* Overlay for mobile */}
+    <div className="relative flex flex-col lg:flex-row bg-gray-50 min-h-screen">
+      {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-30 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div
+      <aside
         ref={sidebarRef}
-        className={`fixed z-40 top-0 left-0 h-full w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
-          ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
-          lg:relative lg:translate-x-0 lg:z-auto`}
+        className={`fixed z-50 top-0 left-0 h-full w-72 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        lg:relative lg:translate-x-0 lg:z-0 border-r`}
       >
-        <div className="h-full overflow-y-auto border-r">
+        <div className="h-full overflow-y-auto px-4 py-6">
           <FilterSidebar />
         </div>
-      </div>
+      </aside>
 
-      {/* Main content */}
-      <div className="flex-1 p-4 lg:p-8">
-        {/* Mobile filter button */}
-        <div className="lg:hidden mb-4 flex justify-end">
+      {/* Main Content */}
+      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        {/* Top bar for mobile */}
+        <div className="lg:hidden sticky top-0 bg-gray-50 z-30 pb-4 mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold tracking-tight text-gray-800">
+            All Collection
+          </h2>
           <button
             onClick={toggleSidebar}
-            className="inline-flex items-center px-4 py-2 text-sm font-medium bg-white border rounded shadow hover:bg-gray-100"
+            className="inline-flex items-center px-3 py-2 text-sm font-medium bg-white border rounded shadow hover:bg-gray-100"
           >
             <FaFilter className="mr-2" />
             Filters
           </button>
         </div>
 
-        <h2 className="text-2xl font-semibold tracking-wide uppercase  text-gray-800">
-       All collection
-        </h2>
+        {/* Heading for desktop */}
+        <div className="hidden lg:block mb-6">
+          <h2 className="text-3xl font-bold tracking-wide text-gray-900 mb-2">
+            All Collection
+          </h2>
+        </div>
 
+        {/* Sort Options */}
         <div className="mb-6">
           <SortOptions />
         </div>
 
+        {/* Products */}
         <ProductGrid products={products} loading={loading} error={error} />
-      </div>
+      </main>
     </div>
   );
 };
