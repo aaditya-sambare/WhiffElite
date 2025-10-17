@@ -42,6 +42,8 @@ function Navbar() {
     setShowMobileSearch((prev) => !prev);
   };
 
+  console.log("user in navbar:", user);
+
   return (
     <nav className="bg-black px-3 py-2 w-full">
       <div className="container mx-auto flex flex-wrap items-center justify-between gap-3">

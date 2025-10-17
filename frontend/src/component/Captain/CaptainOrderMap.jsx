@@ -1,67 +1,57 @@
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import React from "react";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 const containerStyle = {
   width: "100%",
   height: "260px",
 };
 
-const mapStyles = [
-  {
-    featureType: "poi",
-    stylers: [{ visibility: "off" }],
-  },
-  {
-    featureType: "transit",
-    stylers: [{ visibility: "off" }],
-  },
-  {
-    featureType: "road.local",
-    elementType: "labels",
-    stylers: [{ visibility: "off" }],
-  },
-  {
-    featureType: "administrative",
-    elementType: "labels",
-    stylers: [{ visibility: "off" }],
-  },
-];
-  
+// Fix for default marker icon
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
+  iconUrl: require("leaflet/dist/images/marker-icon.png"),
+  shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
+});
 
-const mapOptions = {
-  mapTypeControl: false, // removes the map/satellite toggle
-  fullscreenControl: true,
-  streetViewControl: false,
-  zoomControl: false, // optional: remove zoom buttons
-  clickableIcons: false,
-  disableDefaultUI: true, // disables all default UI, use this instead if you want a clean map
-  styles: mapStyles,
-};
+// Custom bike icon
+const bikeIcon = L.icon({
+  iconUrl: "/bike-icon.png",
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+});
+
+// Add MapUpdater component
+function MapUpdater({ center }) {
+  const map = useMap();
+  React.useEffect(() => {
+    map.setView(center, map.getZoom());
+  }, [center, map]);
+  return null;
+}
 
 const CaptainMap = ({ lat, lng }) => {
-  const { isLoaded } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-  });
+  const position = [lat, lng];
 
-  const center = { lat, lng };
-
-  return isLoaded ? (
-    <GoogleMap
-      mapContainerStyle={containerStyle}
-      center={center}
-      zoom={18}
-      options={mapOptions}
-    >
-      <Marker
-        position={center}
-        icon={{
-          url: "/bike-icon.png", // make sure this is placed in public/
-          scaledSize: new window.google.maps.Size(40, 40),
-        }}
-      />
-    </GoogleMap>
-  ) : (
-    <div>Loading map...</div>
+  return (
+    <div style={containerStyle}>
+      <MapContainer
+        center={position}
+        zoom={18}
+        style={{ height: "100%", width: "100%" }}
+        zoomControl={false}
+        attributionControl={false}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <MapUpdater center={position} />
+        <Marker position={position} icon={bikeIcon} />
+      </MapContainer>
+    </div>
   );
 };
 

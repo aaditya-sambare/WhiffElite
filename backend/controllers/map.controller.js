@@ -68,25 +68,24 @@ module.exports.getDirections = async (req, res) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
+
   const { origin, destination } = req.query;
   if (!origin || !destination) {
     return res.status(400).json({ message: "Origin and destination required" });
   }
+
   try {
-    const apiKey = process.env.GOOGLE_MAPS_API;
-    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${encodeURIComponent(
-      origin
-    )}&destination=${encodeURIComponent(destination)}&key=${apiKey}`;
-    const response = await axios.get(url);
-    if (
-      response.data.status === "OK" &&
-      response.data.routes &&
-      response.data.routes.length > 0
-    ) {
-      // Return the overview_polyline for the route
+    const originCoords = await mapService.getAddressCoordinates(origin);
+    const destCoords = await mapService.getAddressCoordinates(destination);
+
+    const response = await axios.get(
+      `https://api.geoapify.com/v1/routing?waypoints=${originCoords.lat},${originCoords.lng}|${destCoords.lat},${destCoords.lng}&mode=drive&details=instruction_details&apiKey=${process.env.GEOAPIFY_API_KEY}`
+    );
+
+    if (response.data.features && response.data.features.length > 0) {
       return res.json({
-        polyline: response.data.routes[0].overview_polyline.points,
-        legs: response.data.routes[0].legs,
+        route: response.data.features[0],
+        legs: response.data.features[0].properties.legs,
       });
     } else {
       return res.status(400).json({ message: "No route found" });
