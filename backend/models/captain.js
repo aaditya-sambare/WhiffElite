@@ -94,18 +94,21 @@ const captainSchema = new mongoose.Schema(
       default: false,
     },
     rating: Number,
-   
+
     ratings: [{ type: Number, min: 1, max: 5 }],
-    deliveries: [
-      {
-        orderId: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
-        address: String,
-        status: String, // e.g., "Completed", "Pending", "Failed"
-        earnings: Number,
-        date: String, // or Date
-        time: String, // or store as Date and format in frontend
-      }
-    ],
+    deliveries: {
+      type: [
+        {
+          orderId: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
+          address: String,
+          status: String, // e.g., "Completed", "Pending", "Failed"
+          earnings: Number,
+          date: String, // or Date
+          time: String, // or store as Date and format in frontend
+        },
+      ],
+      default: [],
+    },
   },
   { timestamps: true }
 );
@@ -128,4 +131,3 @@ captainSchema.statics.hashPassword = async function (password) {
 };
 
 module.exports = mongoose.model("Captain", captainSchema);
-

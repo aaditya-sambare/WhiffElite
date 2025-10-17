@@ -134,7 +134,7 @@ export default function PopupWithMap({
           </div>
         </div>
 
-        <div className="w-full h-56 sm:h-64 rounded-xl overflow-hidden mb-4">
+        {/* <div className="w-full h-56 sm:h-64 rounded-xl overflow-hidden mb-4">
           <iframe
             width="100%"
             height="100%"
@@ -142,7 +142,7 @@ export default function PopupWithMap({
             allowFullScreen
             src={mapEmbedUrl}
           ></iframe>
-        </div>
+        </div> */}
 
         <a
           href={directionUrl}

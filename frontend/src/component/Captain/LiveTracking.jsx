@@ -1,45 +1,43 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { LoadScript, GoogleMap, Marker, Polyline } from "@react-google-maps/api";
-import polyline from "@mapbox/polyline";
+import React, { useState, useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import axios from "axios";
+
+// Fix for default marker icon
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
+  iconUrl: require("leaflet/dist/images/marker-icon.png"),
+  shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
+});
 
 const containerStyle = {
   width: "100%",
   height: "100%",
 };
 
-const defaultCenter = {
-  lat: 22.7196,
-  lng: 75.8577,
-};
+const defaultCenter = [22.7196, 75.8577]; // Note: Leaflet uses [lat, lng]
 
-const bikeIcon = {
-  url: "/bike-icon.png",
-  scaledSize: { width: 40, height: 40 },
-};
+const bikeIcon = L.icon({
+  iconUrl: "/bike-icon.png",
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+});
+
+// Custom component to update map center
+function MapUpdater({ center }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, map.getZoom());
+  }, [center, map]);
+  return null;
+}
 
 const LiveTracking = ({ pickup, destination, showDirections }) => {
   const [currentPosition, setCurrentPosition] = useState(defaultCenter);
   const [loading, setLoading] = useState(true);
-  const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
   const [routePath, setRoutePath] = useState([]);
-
-  const mapOptions = useMemo(
-    () => ({
-      disableDefaultUI: true,
-      zoomControl: true,
-      styles: [
-        {
-          featureType: "poi",
-          elementType: "labels",
-          stylers: [{ visibility: "off" }],
-        },
-      ],
-    }),
-    []
-  );
-
-  const handleGoogleMapsLoad = () => setGoogleMapsLoaded(true);
 
   // Get current position
   useEffect(() => {
@@ -48,10 +46,10 @@ const LiveTracking = ({ pickup, destination, showDirections }) => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           if (isMounted) {
-            setCurrentPosition({
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            });
+            setCurrentPosition([
+              position.coords.latitude,
+              position.coords.longitude,
+            ]);
             setLoading(false);
           }
         },
@@ -63,10 +61,10 @@ const LiveTracking = ({ pickup, destination, showDirections }) => {
       const watchId = navigator.geolocation.watchPosition(
         (position) => {
           if (isMounted) {
-            setCurrentPosition({
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            });
+            setCurrentPosition([
+              position.coords.latitude,
+              position.coords.longitude,
+            ]);
           }
         },
         () => {}
@@ -80,20 +78,18 @@ const LiveTracking = ({ pickup, destination, showDirections }) => {
     }
   }, []);
 
-  // Fetch directions when ride starts (showDirections=true)
+  // Fetch directions when ride starts
   useEffect(() => {
     const fetchDirections = async () => {
       if (pickup && destination && showDirections) {
         try {
-          // Use address string or lat/lng as needed
           const origin =
-            typeof pickup === "string"
-              ? pickup
-              : `${pickup.lat},${pickup.lng}`;
+            typeof pickup === "string" ? pickup : `${pickup.lat},${pickup.lng}`;
           const dest =
             typeof destination === "string"
               ? destination
               : `${destination.lat},${destination.lng}`;
+
           const { data } = await axios.get(
             `${process.env.REACT_APP_BACKEND_URL}/api/maps/directions`,
             {
@@ -103,12 +99,7 @@ const LiveTracking = ({ pickup, destination, showDirections }) => {
               },
             }
           );
-          // Decode polyline to array of lat/lng
-          const decoded = polyline.decode(data.polyline).map(([lat, lng]) => ({
-            lat,
-            lng,
-          }));
-          setRoutePath(decoded);
+          setRoutePath(data.coordinates || []);
         } catch (err) {
           setRoutePath([]);
         }
@@ -127,57 +118,65 @@ const LiveTracking = ({ pickup, destination, showDirections }) => {
         </div>
       )}
 
-      <LoadScript
-        googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
-        onLoad={handleGoogleMapsLoad}
+      <MapContainer
+        center={currentPosition}
+        zoom={19}
+        style={containerStyle}
+        zoomControl={true}
+        attributionControl={false}
       >
-        {googleMapsLoaded && (
-          <GoogleMap
-            mapContainerStyle={containerStyle}
-            center={currentPosition}
-            zoom={19}
-            options={mapOptions}
+        {/* <TileLayer
+          attribution='Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | © OpenStreetMap contributors'
+          url={`https://maps.geoapify.com/v1/styles/osm-carto/vector/tile/{z}/{x}/{y}.pbf?apiKey=${process.env.REACT_APP_GEOAPIFY_API_KEY}`}
+          maxZoom={20}
+        /> */}
+        <TileLayer
+          attribution='Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | © OpenStreetMap contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <MapUpdater center={currentPosition} />
+
+        {pickup && (
+          <Marker
+            position={[pickup.lat, pickup.lng]}
+            icon={L.divIcon({
+              className: "custom-div-icon",
+              html: '<div style="background-color: #4CAF50; padding: 5px; border-radius: 50%; color: white;">P</div>',
+              iconSize: [30, 30],
+              iconAnchor: [15, 15],
+            })}
           >
-            {/* Pickup Marker */}
-            {pickup && (
-              <Marker
-                position={pickup}
-                label={{ text: "Pickup", color: "white" }}
-                icon={{
-                  url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
-                }}
-              />
-            )}
-            {/* Destination Marker */}
-            {destination && (
-              <Marker
-                position={destination}
-                label={{ text: "Drop", color: "white" }}
-                icon={{
-                  url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-                }}
-              />
-            )}
-            {/* Bike/Current Position Marker */}
-            <Marker
-              position={currentPosition}
-              icon={bikeIcon}
-              label={{ text: "You", color: "black" }}
-            />
-            {/* Route Polyline */}
-            {routePath.length > 1 && (
-              <Polyline
-                path={routePath}
-                options={{
-                  strokeColor: "#4285F4",
-                  strokeOpacity: 0.9,
-                  strokeWeight: 5,
-                }}
-              />
-            )}
-          </GoogleMap>
+            <Popup>Pickup Location</Popup>
+          </Marker>
         )}
-      </LoadScript>
+
+        {destination && (
+          <Marker
+            position={[destination.lat, destination.lng]}
+            icon={L.divIcon({
+              className: "custom-div-icon",
+              html: '<div style="background-color: #f44336; padding: 5px; border-radius: 50%; color: white;">D</div>',
+              iconSize: [30, 30],
+              iconAnchor: [15, 15],
+            })}
+          >
+            <Popup>Destination</Popup>
+          </Marker>
+        )}
+
+        <Marker position={currentPosition} icon={bikeIcon}>
+          <Popup>You are here</Popup>
+        </Marker>
+
+        {routePath.length > 1 && (
+          <Polyline
+            positions={routePath}
+            color="#4285F4"
+            weight={5}
+            opacity={0.9}
+          />
+        )}
+      </MapContainer>
     </div>
   );
 };

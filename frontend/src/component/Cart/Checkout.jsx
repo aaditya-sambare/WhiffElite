@@ -3,14 +3,51 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { createCheckout } from "../../redux/slice/checkoutSlice";
 import axios from "axios";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+// Fix for default marker icon
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
+  iconUrl: require("leaflet/dist/images/marker-icon.png"),
+  shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
+});
 
 const containerStyle = {
   width: "100%",
   height: "300px",
 };
 
-const defaultCenter = { lat: 23.2599, lng: 77.4126 }; // Bhopal
+const defaultCenter = [23.2599, 77.4126]; // Bhopal [lat, lng]
+
+// Map Click Handler Component
+function LocationMarker({ onLocationSelect }) {
+  const [position, setPosition] = useState(null);
+
+  const map = useMapEvents({
+    click(e) {
+      const { lat, lng } = e.latlng;
+      setPosition({ lat, lng });
+      onLocationSelect({ lat, lng });
+    },
+  });
+
+  return position === null ? null : (
+    <Marker
+      position={[position.lat, position.lng]}
+      draggable={true}
+      eventHandlers={{
+        dragend: (e) => {
+          const marker = e.target;
+          const position = marker.getLatLng();
+          onLocationSelect({ lat: position.lat, lng: position.lng });
+        },
+      }}
+    />
+  );
+}
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -21,6 +58,7 @@ const Checkout = () => {
   const [fare, setFare] = useState(null);
   const [checkoutId, setCheckoutId] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const [shippingAddress, setShippingAddress] = useState({
     firstName: "",
@@ -32,10 +70,6 @@ const Checkout = () => {
     country: "",
     phone: "",
     location: null, // lat/lng will be stored here
-  });
-
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
   });
 
   // Redirect if cart is empty
@@ -98,43 +132,52 @@ const Checkout = () => {
   // Submit checkout
   const handleCreateCheckout = async (e) => {
     e.preventDefault();
+    setIsProcessing(true); // Start loading
 
-    if (!selectedLocation) {
-      alert("Please select a delivery location on the map.");
-      return;
-    }
+    try {
+      if (!selectedLocation) {
+        alert("Please select a delivery location on the map.");
+        setIsProcessing(false);
+        return;
+      }
 
-    const fareResult = await findTrip();
-    if (!fareResult || !fareResult.fare) {
-      alert("Failed to calculate delivery fare.");
-      return;
-    }
+      const fareResult = await findTrip();
+      if (!fareResult || !fareResult.fare) {
+        alert("Failed to calculate delivery fare.");
+        setIsProcessing(false);
+        return;
+      }
 
-    const totalWithFare =
-      parseFloat(cart.totalPrice) + parseFloat(fareResult.fare);
+      const totalWithFare =
+        parseFloat(cart.totalPrice) + parseFloat(fareResult.fare);
 
-    const res = await dispatch(
-      createCheckout({
-        checkoutItems: cart.products,
-        shippingAddress,
-        paymentMethod: "Paypal",
-        totalPrice: totalWithFare,
-        deliveryCharge: fareResult.fare,
-        pickup: fareResult.pickup,
-        destination: `${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.country}`,
-      })
-    );
-
-    if (res.payload && res.payload._id) {
-      setCheckoutId(res.payload._id);
-      navigate("/payment", {
-        state: {
-          checkoutId: res.payload._id,
-          fare: fareResult.fare,
+      const res = await dispatch(
+        createCheckout({
+          checkoutItems: cart.products,
           shippingAddress,
-          storeAddress: fareResult.pickup,
-        },
-      });
+          paymentMethod: "Paypal",
+          totalPrice: totalWithFare,
+          deliveryCharge: fareResult.fare,
+          pickup: fareResult.pickup,
+          destination: `${shippingAddress.address}, ${shippingAddress.city}, ${shippingAddress.country}`,
+        })
+      );
+
+      if (res.payload && res.payload._id) {
+        setCheckoutId(res.payload._id);
+        navigate("/payment", {
+          state: {
+            checkoutId: res.payload._id,
+            fare: fareResult.fare,
+            shippingAddress,
+            storeAddress: fareResult.pickup,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+    } finally {
+      setIsProcessing(false); // Stop loading
     }
   };
 
@@ -176,36 +219,33 @@ const Checkout = () => {
               <h3 className="text-lg font-semibold text-gray-700 mb-2">
                 Select Delivery Location
               </h3>
-              {isLoaded ? (
-                <GoogleMap
-                  mapContainerStyle={containerStyle}
-                  center={selectedLocation || defaultCenter}
-                  zoom={14}
-                  onClick={(e) =>
-                    setSelectedLocation({
-                      lat: e.latLng.lat(),
-                      lng: e.latLng.lng(),
-                    })
-                  }
+              <div style={containerStyle}>
+                <MapContainer
+                  center={defaultCenter}
+                  zoom={13}
+                  style={{ height: "100%", width: "100%" }}
+                  attributionControl={false}
                 >
-                  {selectedLocation && (
-                    <Marker
-                      position={selectedLocation}
-                      draggable
-                      onDragEnd={(e) =>
-                        setSelectedLocation({
-                          lat: e.latLng.lat(),
-                          lng: e.latLng.lng(),
-                        })
-                      }
-                    />
-                  )}
-                </GoogleMap>
-              ) : (
-                <p className="text-center text-gray-500 py-2">
-                  Map is loading...
-                </p>
-              )}
+                  <TileLayer
+                    attribution='Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | © OpenStreetMap contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  {/* <TileLayer
+                    attribution='Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | © OpenStreetMap contributors'
+                    url={`https://maps.geoapify.com/v1/styles/osm-carto/rendered/{z}/{x}/{y}.png?apiKey=${process.env.REACT_APP_GEOAPIFY_API_KEY}`}
+                    maxZoom={20}
+                  /> */}
+                  <LocationMarker
+                    onLocationSelect={(location) => {
+                      setSelectedLocation(location);
+                      setShippingAddress((prev) => ({
+                        ...prev,
+                        location: location,
+                      }));
+                    }}
+                  />
+                </MapContainer>
+              </div>
               {selectedLocation && (
                 <div className="mt-2 text-sm text-gray-600">
                   Selected Location: {selectedLocation.lat.toFixed(4)},{" "}
@@ -341,9 +381,36 @@ const Checkout = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-blue-500 to-blue-700 text-white py-3 rounded-lg shadow-lg hover:opacity-90 transition duration-200"
+            disabled={isProcessing}
+            className="w-full bg-gradient-to-r from-blue-500 to-blue-700 text-white py-3 rounded-lg shadow-lg hover:opacity-90 transition duration-200 flex items-center justify-center"
           >
-            Continue to Payment
+            {isProcessing ? (
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Processing...
+              </>
+            ) : (
+              "Continue to Payment"
+            )}
           </button>
         </form>
 

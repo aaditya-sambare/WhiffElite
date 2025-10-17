@@ -1,16 +1,22 @@
 import { faCircleUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { fetchStoreOwnerOrders } from "../redux/slice/storeOwnerOrderSlice";
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchStoreOwnerProfile } from "../redux/slice/storeOwnerAuthSlice";
+import OrderPopUp from "../component/StoreOwner/orderPopUp";
 
 const StoreOwnerDashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { orders, loading } = useSelector((state) => state.storeOwnerOrders);
-  const { user: storeOwner, error } = useSelector((state) => state.storeOwnerAuth);
+  const { user: storeOwner, error } = useSelector(
+    (state) => state.storeOwnerAuth
+  );
+  const [showOrderPopup, setShowOrderPopup] = useState(false);
+  const [newOrder, setNewOrder] = useState(null);
+  const prevOrdersRef = useRef(orders);
 
   useEffect(() => {
     if (!storeOwner) {
@@ -25,6 +31,22 @@ const StoreOwnerDashboard = () => {
     }, 10000);
     return () => clearInterval(interval);
   }, [dispatch]);
+
+  useEffect(() => {
+    // Check for new orders by comparing with previous orders
+    if (orders?.length > 0 && prevOrdersRef.current) {
+      const latestOrder = orders[0];
+      if (
+        !prevOrdersRef.current.find(
+          (prevOrder) => prevOrder._id === latestOrder._id
+        )
+      ) {
+        setNewOrder(latestOrder);
+        setShowOrderPopup(true);
+      }
+    }
+    prevOrdersRef.current = orders;
+  }, [orders]);
 
   const handleRowClick = (orderId) => {
     navigate(`/store-orders/${orderId}`);
@@ -46,13 +68,13 @@ const StoreOwnerDashboard = () => {
   const totalOrders = orders?.length || 0;
   const recentOrders = orders?.slice(0, 5) || [];
 
-  console.log(recentOrders)
+  
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
-      
       <h1 className="text-3xl font-semibold text-gray-800 mb-8">
-        Welcome, {storeOwner?.firstname + " " + storeOwner?.lastname || "Store Owner"}!
+        Welcome,{" "}
+        {storeOwner?.firstname + " " + storeOwner?.lastname || "Store Owner"}!
       </h1>
 
       <div className="fixed top-6 right-12 z-20">
@@ -82,7 +104,9 @@ const StoreOwnerDashboard = () => {
 
       {/* Recent Orders */}
       <div className="bg-white p-6 rounded-lg shadow-xl mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-gray-700">Recent Orders</h2>
+        <h2 className="text-xl font-semibold mb-4 text-gray-700">
+          Recent Orders
+        </h2>
 
         {loading ? (
           <p className="text-gray-500">Loading orders...</p>
@@ -94,12 +118,24 @@ const StoreOwnerDashboard = () => {
           <table className="min-w-full table-auto">
             <thead>
               <tr className="border-b">
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Order ID</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Customer</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Captain</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Total</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Status</th>
-                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">GOTO</th>
+                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">
+                  Order ID
+                </th>
+                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">
+                  Customer
+                </th>
+                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">
+                  Captain
+                </th>
+                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">
+                  Total
+                </th>
+                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">
+                  Status
+                </th>
+                <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">
+                  GOTO
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -119,15 +155,20 @@ const StoreOwnerDashboard = () => {
                     onClick={() => handleRowClick(order._id)}
                     className="hover:bg-gray-100 hover:shadow-sm transition duration-200 cursor-pointer"
                   >
-                    <td className="py-4 px-6 text-sm text-gray-700">{order._id}</td>
+                    <td className="py-4 px-6 text-sm text-gray-700">
+                      {order._id}
+                    </td>
                     <td className="py-4 px-6 text-sm text-gray-700 capitalize">
-                      {order?.user?.firstname || "Unknown"} {order?.user?.lastname || ""}
+                      {order?.user?.firstname || "Unknown"}{" "}
+                      {order?.user?.lastname || ""}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-700 capitalize">
                       {order?.captain ? (
                         `${order.captain.firstname} ${order.captain.lastname}`
                       ) : (
-                        <span className="italic text-gray-400">Not Assigned</span>
+                        <span className="italic text-gray-400">
+                          Not Assigned
+                        </span>
                       )}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-700">
@@ -156,6 +197,10 @@ const StoreOwnerDashboard = () => {
           </table>
         )}
       </div>
+
+      {showOrderPopup && (
+        <OrderPopUp order={newOrder} setOrderPopupPanel={setShowOrderPopup} />
+      )}
     </div>
   );
 };
